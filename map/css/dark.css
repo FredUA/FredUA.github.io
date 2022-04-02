@@ -1,0 +1,81 @@
+
+
+/*Dark theme*/
+main {
+	background-color: #202124;
+}
+
+:is(.au-1,
+.au-2,
+.au-3,
+.au-4,
+.au-5,
+.au-6,
+.au-7,
+.au-8,
+.au-9,
+.au-10,
+.au-11,
+.au-12,
+.au-13,
+.au-14,
+.au-15,
+.au-16,
+.au-17,
+.au-18,
+.au-19,
+.au-20,
+.au-21,
+.au-22,
+.au-23,
+.au-24,
+.au-25) .b-title {
+	fill: var(--color-fill-text, #687a4e);
+}
+
+:is(.au-1,
+.au-2,
+.au-3,
+.au-4,
+.au-5,
+.au-6,
+.au-7,
+.au-8,
+.au-9,
+.au-10,
+.au-11,
+.au-12,
+.au-13,
+.au-14,
+.au-15,
+.au-16,
+.au-17,
+.au-18,
+.au-19,
+.au-20,
+.au-21,
+.au-22,
+.au-23,
+.au-24,
+.au-25) path {
+	fill: var(--color-fill-dark);
+	stroke: var(--color-stroke-dark);
+}
+
+.switcher__radio {
+    filter: invert(1);
+}
+
+.switcher__radio:checked {
+    filter: invert(0);
+}
+
+.switcher__status {
+    filter: invert(1);
+}
+
+.alert {
+	--color-fill-dark: #f98276;
+	--color-stroke-dark: #b7463a;
+	--color-fill-text: #270309;
+}

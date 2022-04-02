@@ -1,0 +1,144 @@
+/*Utilities*/
+:root {
+	--color-fill-light: #94d2a5;
+	--color-stroke-light: #688d72;
+	--color-fill-dark: #1a2534;
+	--color-stroke-dark: #3a434e;
+    color-scheme: light dark;
+}
+
+*,
+::before,
+::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+/*Default styles*/
+main {
+	display: grid;
+	padding: 10px;
+	width: 100vw;
+	height: 100vh;
+    justify-items: center;
+	align-items: end;
+}
+
+svg {
+	width: 100%;
+	height: 100%;
+	stroke-width: 0.5;
+	grid-row: 1 / 2;
+	grid-column: 1 / 2;
+}
+
+.b-title {
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	font-weight: bold;
+	font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;
+	font-size: 5.5px;
+	user-select: none;
+}
+
+.b-title--capital {
+	font-size: 6.5px;
+}
+
+/* Switcher */
+
+.switcher {
+	grid-column-end: 2;
+	grid-row-end: 2;
+	margin-bottom: 15px;
+	margin-inline: 15px;
+	position: relative;
+    padding: 2px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border: none;
+	z-index: 1;
+}
+
+/* Switcher Legend */
+
+.switcher__legend {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Switcher Radio */
+
+.switcher__radio {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+    width: 32px;
+    height: 32px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 24px;
+    transition: filter 0.1s ease-in;
+}
+
+.switcher__radio:focus {
+    outline: none;
+}
+
+.switcher__radio--light {
+    background-image: url('../icons/light.svg');
+}
+
+.switcher__radio--auto {
+    background-image: url('../icons/auto.svg');
+}
+
+.switcher__radio--dark {
+    background-image: url('../icons/dark.svg');
+}
+
+/* Switcher Status */
+
+.switcher__status {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    box-shadow: 0 0 0 2px rgb(0 0 0 / 0.2);
+    border-radius: 18px;
+    background-color: rgb(255 255 255 / 0.5);
+    background-repeat: no-repeat;
+    background-image: url('../icons/status.svg');
+    background-size: 32px;
+    background-position: center;
+    transition: background-position 0.1s ease-in;
+}
+
+.switcher__radio:focus-visible ~ .switcher__status {
+    box-shadow: 0 0 0 2px black;
+}
+
+.switcher__radio--light:checked ~ .switcher__status {
+    background-position: left 2px center;
+}
+
+.switcher__radio--auto:checked ~ .switcher__status {
+    background-position: center center;
+}
+
+.switcher__radio--dark:checked ~ .switcher__status {
+    background-position: right 2px center;
+}
+
+@media screen and (min-width: 1024px) {
+	main {
+        justify-items: end;
+    }
+}
