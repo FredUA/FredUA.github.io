@@ -1,114 +1,178 @@
+import styles from './styles.js'
+
 const DEFAULT_TYPE = 'bubble';
+const SETTINGS = {
+	AVAILABLE: true, // false prevent opening popup with raw settings
+	OPENED: false,
+}
 
 
 
 class LetsAnimateClick extends HTMLElement {
+	static get observedAttributes() { return ['type', 'color']; }
 	constructor() {
 		super();
-		console.dir(this);
-
 		this.attachShadow({ mode: 'open' });
+		console.log(`constructor`);
 	}
 
 	connectedCallback() {
+		console.log('connectedCallback');
 		this.type = this.getAttribute('type') || DEFAULT_TYPE;
+		this.color = this.getAttribute('color') || 'currentColor';
 
 		this.shadowRoot.innerHTML = `
-			<style>
-				:host {
-					--x: 0;
-					--y: 0;
-					visibility: hidden;
+			<style id="control">
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+				#btn-ctrl,
+				#style {
+					--style-gap: 10px;
+					--style-width: 250px;
+				}
+				#style {
 					position: fixed;
-					pointer-events: none;
-					inset: 0;
-					overflow: hidden;
-				}
-
-				.el {
-					content: '';
-					display: inline-block;
-					width: 5rem;
-					aspect-ratio: 1 / 1;
-					position: absolute;
+					inset: auto var(--style-gap) var(--style-gap) auto;
+					opacity: 0;
+					width: var(--style-width);
+					height: 350px;
+					z-index: 10;
+					overflow: auto;
+					margin: 0;
+					box-shadow: 0 0 100vmax rgba(0, 0, 0, 0.5), 0 0 2rem rgba(0, 0, 0, 0.5);
+					border-radius: 5px;
+					padding-block: 5px;
+					padding-inline: 5px;
 					visibility: visible;
-					inset: var(--y) auto auto var(--x);
-					border-radius: 50%;
+					transition: 0.15s linear;
+					transition-property: opacity;
+				}
+				#btn-ctrl {
+					all: unset;
+					background-color: #fff;
+					font-variant-caps: small-caps;
+					padding: 5px 10px;
+					outline: 2px solid lightseagreen;
+					border-radius: 2px;
+					cursor: pointer;
+					position: fixed;
+					inset: auto calc(var(--style-width) + var(--style-gap) + 10px) var(--style-gap) auto;
+					font-family: Arial, sans-serif;
+					font-size: 11px;
+					font-weight: bolder;
+					transition: 0.15s linear;
+					transition-property: color, opacity, outline-color;
+					visibility: visible;
 					opacity: 0;
+					color: blueviolet;
 				}
-				
-				.bubble {
-					transform: translate(-50%, -50%) scale(0);
-					background-color: red;
+				#btn-ctrl:not(.hidden),
+				#style:not(.hidden) {
+					pointer-events: all;
+					opacity: 1;
+					display: inline-block;
 				}
-				
-				.bubble.active {
-					animation: bubble 0.35s;
+				#btn-ctrl:hover {
+					color: darkmagenta;
+					outline-color: hotpink
 				}
-				
-				.ripple {
-					transform: translate(-50%, -50%) scale(1.5);
-					outline: 1px solid lightblue;
+				#btn-ctrl::before {
+					content: 'Pretify';
+				#btn-ctrl.pre::before {
+					content: 'Save';
 				}
-				
-				.ripple.active {
-					animation: ripple 0.5s;
+				#btn-ctrl.hidden {
+					background-color: #e2e2e2;
 				}
-
-				@keyframes bubble {
-					25% {
-						opacity: 0.5;
-					}
-					100% {
-					transform: translate(-50%, -50%) scale(1);
-					opacity: 0;
-					}
-				}
-
-				@keyframes ripple {
-					10% {
-						opacity: 1;
-					}
-					80% {
-						transform: translate(-50%, -50%) scale(0.2);
-						opacity: 1;
-
-					}
-					100% {
-					transform: translate(-50%, -50%) scale(0);
-					opacity: 0;
-					}
-				}
+			</style>
+			<button id="btn-ctrl" class="hidden"></button>
+			<style id="style" class="hidden" contenteditable="true">
+				${styles()}
 			</style>
 			<span class="el ${this.type}"></span>
 		`;
 		this.el = this.shadowRoot.querySelector('.el');
+		this.styleElement = this.shadowRoot.getElementById('style');
+		this.btnCtrl = this.shadowRoot.getElementById('btn-ctrl');
 
 		this.initIvent();
 	}
 
-	initIvent() {
-		document.addEventListener('click', (e) => {
-			this.el.style.setProperty('--x', `${e.x}px`)
-			this.el.style.setProperty('--y', `${e.y}px`);
+	disconnectedCallback() {
+		console.log('disconnectedCallback');
+	}
 
-			this.el.classList.add('active');
-		})
+	initIvent() {
+		document.addEventListener('click', this.clickHandler)
 
 		this.el.addEventListener('animationend', () => {
 			this.el.classList.remove('active');
 		})
+
+		this.btnCtrl.addEventListener('click', this.controlHandler)
+
+		document.addEventListener('keydown', this.keyPressHandler)
 	}
 
-	attributeChangedCallback() {
+	clickHandler = (e) => {
+		this.el.style.setProperty('--x', `${e.x}px`)
+		this.el.style.setProperty('--y', `${e.y}px`);
 
+		this.el.classList.add('active');
+	}
+
+	controlHandler = (e) => {
+		e.preventDefault();
+
+		if (!SETTINGS.OPENED) {
+			const styleElement = this.shadowRoot.getElementById('style');
+			SETTINGS.STYLE_EL = styleElement.outerHTML;
+			SETTINGS.PRE_EL = SETTINGS.STYLE_EL.replaceAll("<style", "<pre").replaceAll("</style", "</pre");
+	
+			styleElement.outerHTML = SETTINGS.PRE_EL;
+		} else {
+			const styleElement = this.shadowRoot.getElementById('style');
+			SETTINGS.PRE_EL = styleElement.outerHTML;
+			SETTINGS.STYLE_EL = SETTINGS.PRE_EL.replaceAll("<pre", "<style").replaceAll("</pre", "</style");
+	
+			styleElement.outerHTML = SETTINGS.STYLE_EL;
+		}
+
+		
+		SETTINGS.OPENED = !SETTINGS.OPENED;
+	}
+
+	keyPressHandler = (event) => {
+		const fired = event.altKey && event.ctrlKey && event.shiftKey && event.code === 'KeyS'
+
+		if (fired) {
+			this.shadowRoot.getElementById('style').classList.toggle('hidden');
+			this.btnCtrl.classList.toggle('hidden');
+		}
+	}
+
+	attributeChangedCallback(name, oldValue, newValue) {
+		console.log(name, oldValue, newValue);
+		if(newValue === null || this.shadowRoot.querySelector('.el') === null) {
+			return;
+		}
+
+		if(name === 'type' ) {
+			this.shadowRoot.querySelector('.el').className = `el ${newValue}`;
+		}
+
+		if(name === 'color' ) {
+			this.shadowRoot.querySelector('.el').style.setProperty('--color', `${newValue}`);
+		}
 	}
 
 
 }
 
 customElements.define('animated-click', LetsAnimateClick);
-
 /*
 
 1. Баблінг по кліку, чи ефект хвильки
