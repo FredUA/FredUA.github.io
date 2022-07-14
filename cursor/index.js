@@ -1,102 +1,39 @@
-import styles from './styles.js'
+import { control, element } from './styles.js'
 
-const DEFAULT_TYPE = 'bubble';
+const DEFAULT_TYPE = 'bubble'; // type of effect (available - bubbles, ripples)
 const SETTINGS = {
-	AVAILABLE: true, // false prevent opening popup with raw settings
-	OPENED: false,
+	AVAILABLE: true, // true/false, allow opening popup with raw settings
+	ANIMATION_SPEED: 500, //speed for bubbles animation
+	COLOR: 'currentColor', //color for bubbles
 }
 
 
 
 class LetsAnimateClick extends HTMLElement {
-	static get observedAttributes() { return ['type', 'color']; }
+	static get observedAttributes() { return ['type', 'color', 'speed']; } //an array of attributes you need to observe
 	constructor() {
 		super();
-		this.attachShadow({ mode: 'open' });
-		console.log(`constructor`);
+		this.attachShadow({ mode: 'open' }); // attached shadow DOM
 	}
 
-	connectedCallback() {
-		console.log('connectedCallback');
-		this.type = this.getAttribute('type') || DEFAULT_TYPE;
-		this.color = this.getAttribute('color') || 'currentColor';
-
+	createBodyShadowRoot() { // adding needed elements and style tags
 		this.shadowRoot.innerHTML = `
 			<style id="control">
-			*,
-			*::before,
-			*::after {
-				box-sizing: border-box;
-			}
-				#btn-ctrl,
-				#style {
-					--style-gap: 10px;
-					--style-width: 250px;
-				}
-				#style {
-					position: fixed;
-					inset: auto var(--style-gap) var(--style-gap) auto;
-					opacity: 0;
-					width: var(--style-width);
-					height: 350px;
-					z-index: 10;
-					overflow: auto;
-					margin: 0;
-					box-shadow: 0 0 100vmax rgba(0, 0, 0, 0.5), 0 0 2rem rgba(0, 0, 0, 0.5);
-					border-radius: 5px;
-					padding-block: 5px;
-					padding-inline: 5px;
-					visibility: visible;
-					transition: 0.15s linear;
-					transition-property: opacity;
-				}
-				#btn-ctrl {
-					all: unset;
-					background-color: #fff;
-					font-variant-caps: small-caps;
-					padding: 5px 10px;
-					outline: 2px solid lightseagreen;
-					border-radius: 2px;
-					cursor: pointer;
-					position: fixed;
-					inset: auto calc(var(--style-width) + var(--style-gap) + 10px) var(--style-gap) auto;
-					font-family: Arial, sans-serif;
-					font-size: 11px;
-					font-weight: bolder;
-					transition: 0.15s linear;
-					transition-property: color, opacity, outline-color;
-					visibility: visible;
-					opacity: 0;
-					color: blueviolet;
-				}
-				#btn-ctrl:not(.hidden),
-				#style:not(.hidden) {
-					pointer-events: all;
-					opacity: 1;
-					display: inline-block;
-				}
-				#btn-ctrl:hover {
-					color: darkmagenta;
-					outline-color: hotpink
-				}
-				#btn-ctrl::before {
-					content: 'Pretify';
-				#btn-ctrl.pre::before {
-					content: 'Save';
-				}
-				#btn-ctrl.hidden {
-					background-color: #e2e2e2;
-				}
+			${control()}
+			</style>
+			<style id="style" class="hidden" contenteditable="true">
+			${element(this.speed, this.color)}
 			</style>
 			<button id="btn-ctrl" class="hidden"></button>
-			<style id="style" class="hidden" contenteditable="true">
-				${styles()}
-			</style>
-			<span class="el ${this.type}"></span>
 		`;
-		this.el = this.shadowRoot.querySelector('.el');
-		this.styleElement = this.shadowRoot.getElementById('style');
 		this.btnCtrl = this.shadowRoot.getElementById('btn-ctrl');
+		this.btnCtrl.addEventListener('click', this.controlHandler);
+	}
+
+	connectedCallback() { //fire when element is placed inside the DOM
+		this.type = this.getAttribute('type') || DEFAULT_TYPE;
+		this.color = this.getAttribute('color') || SETTINGS.COLOR;
+		this.speed = this.getAttribute('speed') || SETTINGS.ANIMATION_SPEED;
 
 		this.initIvent();
 	}
@@ -105,79 +42,88 @@ class LetsAnimateClick extends HTMLElement {
 		console.log('disconnectedCallback');
 	}
 
-	initIvent() {
+	initIvent() { // initialization
+		this.createBodyShadowRoot();
 		document.addEventListener('click', this.clickHandler)
-
-		this.el.addEventListener('animationend', () => {
-			this.el.classList.remove('active');
-		})
-
-		this.btnCtrl.addEventListener('click', this.controlHandler)
-
 		document.addEventListener('keydown', this.keyPressHandler)
 	}
 
 	clickHandler = (e) => {
-		this.el.style.setProperty('--x', `${e.x}px`)
-		this.el.style.setProperty('--y', `${e.y}px`);
+		const newBubble = document.createElement('span');
+		newBubble.className = `el ${this.type}`;
+		newBubble.style.setProperty('--x', `${e.x}px`)
+		newBubble.style.setProperty('--y', `${e.y}px`);
 
-		this.el.classList.add('active');
+		this.shadowRoot.appendChild(newBubble);
+		this.timer(newBubble);
 	}
 
-	controlHandler = (e) => {
+	controlHandler = (e) => { //allow to render and edit tag style with raw styles
 		e.preventDefault();
 
-		if (!SETTINGS.OPENED) {
+		if (!SETTINGS.OPENED) { //here we swap style tag to pre for pretify CSS
 			const styleElement = this.shadowRoot.getElementById('style');
 			SETTINGS.STYLE_EL = styleElement.outerHTML;
 			SETTINGS.PRE_EL = SETTINGS.STYLE_EL.replaceAll("<style", "<pre").replaceAll("</style", "</pre");
-	
+
 			styleElement.outerHTML = SETTINGS.PRE_EL;
-		} else {
+		} else { // here we return the style tag
 			const styleElement = this.shadowRoot.getElementById('style');
+
 			SETTINGS.PRE_EL = styleElement.outerHTML;
 			SETTINGS.STYLE_EL = SETTINGS.PRE_EL.replaceAll("<pre", "<style").replaceAll("</pre", "</style");
-	
 			styleElement.outerHTML = SETTINGS.STYLE_EL;
+
+			const searchPhrase_1 = '--speed: ';
+			const searchPhrase_2 = 'ms';
+			const startIndex = SETTINGS.PRE_EL.indexOf(searchPhrase_1) + searchPhrase_1.length;
+			const endIndex = SETTINGS.PRE_EL.indexOf(searchPhrase_2);
+
+			this.speed = SETTINGS.PRE_EL.slice(startIndex, endIndex);
 		}
 
-		
 		SETTINGS.OPENED = !SETTINGS.OPENED;
 	}
 
-	keyPressHandler = (event) => {
-		const fired = event.altKey && event.ctrlKey && event.shiftKey && event.code === 'KeyS'
+	timer = (element) => { //delete bubble
+		setTimeout(() => {
+			element.remove();
+		}, +this.speed);
+	}
 
-		if (fired) {
+	keyPressHandler = (event) => { //hot keys for opening style tag
+		const fired = event.altKey && event.ctrlKey && event.shiftKey && event.code === 'KeyS' // Ctrl + Alt + Shift + s
+
+		if (fired && SETTINGS.AVAILABLE) { //SETTINGS.AVAILABLE should be true to make it possible 
 			this.shadowRoot.getElementById('style').classList.toggle('hidden');
 			this.btnCtrl.classList.toggle('hidden');
 		}
 	}
 
-	attributeChangedCallback(name, oldValue, newValue) {
-		console.log(name, oldValue, newValue);
-		if(newValue === null || this.shadowRoot.querySelector('.el') === null) {
+	attributeChangedCallback(name, _, newValue) { //here we compare value of attributes
+		if (newValue === null) {
 			return;
 		}
 
-		if(name === 'type' ) {
-			this.shadowRoot.querySelector('.el').className = `el ${newValue}`;
+		if (name === 'type') {
+			this.type = newValue;
 		}
 
-		if(name === 'color' ) {
-			this.shadowRoot.querySelector('.el').style.setProperty('--color', `${newValue}`);
+		if (name === 'color') {
+			this.color = newValue;
 		}
+
+
+		this.createBodyShadowRoot();
 	}
-
-
 }
 
 customElements.define('animated-click', LetsAnimateClick);
 /*
 
-1. Баблінг по кліку, чи ефект хвильки
-2. через атрибути задавати параметри анімації
-3. по гарячим клавішам відкривати налаштування для самого псевдоелемента, давати можливість редагувати і зберігати в LocalStorage
+1. Баблінг по кліку, чи ефект хвильки - DONE
+2. через атрибути задавати параметри анімації - DONE
+3. по гарячим клавішам відкривати налаштування для самого  псевдоелемента, давати можливість редагувати і зберігати в LocalStorage - DONE 2/3
 4. при перезавантаженні першим ділом йти в локал сторедж і там брати налаштування, якщо немає задавати дефолт
 
 */
