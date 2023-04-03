@@ -1,3 +1,7 @@
+/**
+ * @function control Return the styles for #control element
+ * @returns {string}
+ */
 const control = () => {
   return `
 *,
@@ -66,6 +70,13 @@ box-sizing: border-box;
 }
   `
 }
+
+/**
+ * @function element Return the styles for #element animated element
+ * @param {string} speed 
+ * @param {string} color 
+ * @returns {string}
+ */
 const element = (speed, color) => {
   return `
 :host {
