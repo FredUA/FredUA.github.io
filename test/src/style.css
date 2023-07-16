@@ -720,7 +720,7 @@ a.whatsapp {
     grid-template-columns: 0.5fr 1fr 0.5fr 1fr 0.5fr 1fr 0.5fr 1fr 0.5fr 1fr 0.5fr;
     grid-template-rows: repeat(6, 1fr);
     overflow: hidden;
-    gap: 7px 15px;
+    gap: 1.5%;
     aspect-ratio: 1.55;
 }
 .qoute-bottom-img-div ul li a {
